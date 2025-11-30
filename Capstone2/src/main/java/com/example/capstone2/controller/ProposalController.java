@@ -4,6 +4,7 @@ import com.example.capstone2.API.ApiResponse;
 import com.example.capstone2.dto.proposal.ProposalDecisionRequest;
 import com.example.capstone2.dto.proposal.ProposalGenerateRequest;
 import com.example.capstone2.dto.proposal.ProposalSubmitRequest;
+import com.example.capstone2.dto.proposal.ProposalViewDto;
 import com.example.capstone2.model.Proposal;
 import com.example.capstone2.service.ProposalService;
 import jakarta.validation.Valid;
@@ -49,6 +50,12 @@ public class ProposalController {
         return ResponseEntity.status(200).body(proposals);
     }
 
+    @GetMapping("/vendor/{vendorId}/view")
+    public ResponseEntity<?> getProposalViewsForVendor(@PathVariable Integer vendorId) {
+        List<ProposalViewDto> proposals = proposalService.getProposalViewsForVendor(vendorId);
+        return ResponseEntity.status(200).body(proposals);
+    }
+
     @GetMapping("/status/{status}")
     public ResponseEntity<?> getProposalsByStatus(@PathVariable String status) {
         List<Proposal> proposals = proposalService.getProposalsByStatus(status);
@@ -58,6 +65,12 @@ public class ProposalController {
     @GetMapping("/client/{clientId}")
     public ResponseEntity<?> getProposalsForClient(@PathVariable Integer clientId) {
         List<Proposal> proposals = proposalService.getProposalsForClient(clientId);
+        return ResponseEntity.status(200).body(proposals);
+    }
+
+    @GetMapping("/client/{clientId}/view")
+    public ResponseEntity<?> getProposalViewsForClient(@PathVariable Integer clientId) {
+        List<ProposalViewDto> proposals = proposalService.getProposalViewsForClient(clientId);
         return ResponseEntity.status(200).body(proposals);
     }
 

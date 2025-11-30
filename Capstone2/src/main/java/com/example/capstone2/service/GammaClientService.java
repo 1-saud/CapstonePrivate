@@ -62,7 +62,9 @@ public class GammaClientService {
         GammaGenerationStatusResponse lastStatus = null;
 
         int attempts = 0;
-        while (attempts < 10) {   // نحاول 10 مرات، كل 5 ثواني
+        // Keep the connection alive for up to ~5 minutes (60 * 5s) so the user can wait
+        // for long-running generations instead of failing early.
+        while (attempts < 60) {
             attempts++;
 
             ResponseEntity<Map> response = restTemplate.exchange(
