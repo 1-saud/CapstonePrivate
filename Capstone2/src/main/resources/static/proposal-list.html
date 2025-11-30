@@ -247,8 +247,8 @@
     <div id="tableWrapper"></div>
 
     <div class="note">
-        • Vendor data loaded from <code>/api/v1/proposals/vendor/{vendorId}</code>.<br>
-        • Client data loaded from <code>/api/v1/proposals/client/{clientId}</code> with tender/user lookups.
+        • Vendor history uses <code>/api/v1/proposals/vendor/{vendorId}/view</code> so titles are included in one call.<br>
+        • Client review uses <code>/api/v1/proposals/client/{clientId}/view</code> and keeps status + links visible to both sides.
     </div>
 </div>
 
@@ -328,7 +328,7 @@
         wrapper.innerHTML = "<div class='empty-state'>Loading proposals...</div>";
 
         try {
-            const res = await fetch(`/api/v1/proposals/vendor/${state.vendorId}`);
+            const res = await fetch(`/api/v1/proposals/vendor/${state.vendorId}/view`);
             if (!res.ok) {
                 const data = await res.json();
                 wrapper.innerHTML = "<div class='empty-state'>" + (data.message || "Failed to load proposals.") + "</div>";
@@ -341,8 +341,11 @@
                 return;
             }
 
-            const tenderIds = [...new Set(state.proposals.map(p => p.tenderId))];
-            await preloadTenders(tenderIds);
+            state.proposals.forEach(p => {
+                if (p.tenderId && p.tenderTitle) {
+                    state.tenderTitles[p.tenderId] = p.tenderTitle;
+                }
+            });
             renderVendorTable();
 
         } catch (e) {
@@ -357,7 +360,7 @@
         wrapper.innerHTML = "<div class='empty-state'>Loading proposals...</div>";
 
         try {
-            const res = await fetch(`/api/v1/proposals/client/${state.clientId}`);
+            const res = await fetch(`/api/v1/proposals/client/${state.clientId}/view`);
             if (!res.ok) {
                 const data = await res.json();
                 wrapper.innerHTML = "<div class='empty-state'>" + (data.message || "Failed to load proposals.") + "</div>";
@@ -372,9 +375,17 @@
 
             const tenderIds = [...new Set(state.proposals.map(p => p.tenderId))];
             const vendorIds = [...new Set(state.proposals.map(p => p.vendorId))];
+            state.proposals.forEach(p => {
+                if (p.tenderId && p.tenderTitle) {
+                    state.tenderTitles[p.tenderId] = p.tenderTitle;
+                }
+                if (p.vendorId && p.vendorName) {
+                    state.vendorNames[p.vendorId] = p.vendorName;
+                }
+            });
             await Promise.all([
-                preloadTenders(tenderIds),
-                preloadVendors(vendorIds)
+                preloadTenders(tenderIds.filter(id => !state.tenderTitles[id])),
+                preloadVendors(vendorIds.filter(id => !state.vendorNames[id]))
             ]);
             populateClientTenderFilter(tenderIds);
             renderClientTable();

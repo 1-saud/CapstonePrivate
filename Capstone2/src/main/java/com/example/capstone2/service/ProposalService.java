@@ -7,14 +7,17 @@ import com.example.capstone2.dto.gamma.GammaTextOptions;
 import com.example.capstone2.dto.proposal.ProposalDecisionRequest;
 import com.example.capstone2.dto.proposal.ProposalGenerateRequest;
 import com.example.capstone2.dto.proposal.ProposalSubmitRequest;
+import com.example.capstone2.dto.proposal.ProposalViewDto;
 import com.example.capstone2.model.CompanyProfile;
 import com.example.capstone2.model.Proposal;
 import com.example.capstone2.model.Tender;
 import com.example.capstone2.model.TenderRequirement;
+import com.example.capstone2.model.User;
 import com.example.capstone2.repository.CompanyProfileRepository;
 import com.example.capstone2.repository.ProposalRepository;
 import com.example.capstone2.repository.TenderRepository;
 import com.example.capstone2.repository.TenderRequirementRepository;
+import com.example.capstone2.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +35,7 @@ public class ProposalService {
     private final TenderRepository tenderRepository;
     private final TenderRequirementRepository tenderRequirementRepository;
     private final CompanyProfileRepository companyProfileRepository;
+    private final UserRepository userRepository;
     private final GammaClientService gammaClientService;
 
     // ===== Basic CRUD =====
@@ -57,6 +61,20 @@ public class ProposalService {
     }
 
     /**
+     * Vendor-facing view: includes tender title for quick history page rendering.
+     */
+    public List<ProposalViewDto> getProposalViewsForVendor(Integer vendorId) {
+        List<Proposal> proposals = proposalRepository.findProposalsByVendorId(vendorId);
+        if (proposals == null || proposals.isEmpty()) {
+            return List.of();
+        }
+
+        return proposals.stream()
+                .map(p -> enrichViewDto(ProposalViewDto.fromEntity(p)))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Returns every proposal that targets tenders owned by the specified client.
      */
     public List<Proposal> getProposalsForClient(Integer clientId) {
@@ -75,6 +93,30 @@ public class ProposalService {
         }
 
         return proposalRepository.findProposalsByTenderIdIn(tenderIds);
+    }
+
+    /**
+     * Client-facing view that bundles vendor name + tender title to avoid extra round trips.
+     */
+    public List<ProposalViewDto> getProposalViewsForClient(Integer clientId) {
+        List<Tender> clientTenders = tenderRepository.findTendersByClientId(clientId);
+        if (clientTenders == null || clientTenders.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> tenderIds = clientTenders.stream()
+                .map(Tender::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (tenderIds.isEmpty()) {
+            return List.of();
+        }
+
+        return proposalRepository.findProposalsByTenderIdIn(tenderIds)
+                .stream()
+                .map(p -> enrichViewDto(ProposalViewDto.fromEntity(p)))
+                .collect(Collectors.toList());
     }
 
     public boolean addProposal(Proposal proposal) {
@@ -242,6 +284,24 @@ public class ProposalService {
         return proposal;
     }
 
+    private ProposalViewDto enrichViewDto(ProposalViewDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        Tender tender = tenderRepository.findTenderById(dto.getTenderId());
+        if (tender != null) {
+            dto.setTenderTitle(tender.getTitle());
+        }
+
+        User vendor = userRepository.findUserById(dto.getVendorId());
+        if (vendor != null) {
+            dto.setVendorName(vendor.getName());
+        }
+
+        return dto;
+    }
+
     private String buildPrompt(Tender tender,
                                List<TenderRequirement> requirements,
                                CompanyProfile profile,
@@ -269,16 +329,33 @@ public class ProposalService {
 
         prompt.append("Vendor Company Profile:\n");
         prompt.append("- Name: ").append(profile.getCompanyName()).append("\n");
-        prompt.append("- Summary: ").append(profile.getSummary()).append("\n");
-        prompt.append("- Website: ").append(profile.getWebsite()).append("\n");
-        prompt.append("- Location: ").append(profile.getCity()).append(", ")
-                .append(profile.getCountry()).append("\n\n");
+        prompt.append("- Summary: ").append(defaultIfBlank(profile.getSummary(), "Not provided"))
+                .append("\n");
+        prompt.append("- Website: ").append(defaultIfBlank(profile.getWebsite(), "—"))
+                .append("\n");
+        prompt.append("- Location: ").append(defaultIfBlank(profile.getCity(), ""))
+                .append(", ").append(defaultIfBlank(profile.getCountry(), "")).append("\n\n");
+        prompt.append("- Use company strengths and past performance from the summary to tailor the approach.\n\n");
 
         prompt.append("Additional notes from vendor:\n");
         String notes = normalize(request.getNotes());
         prompt.append(notes == null ? "None" : notes);
 
+        prompt.append("\n\nOutput expectations:\n");
+        prompt.append("- Deliver technical and financial sections that respect the stated budget range.\n");
+        prompt.append("- Reference tender requirements explicitly so the client can see coverage.\n");
+        prompt.append("- Keep tone professional and aligned with Saudi government tender style.\n");
+        prompt.append("- Highlight why this vendor's profile fits the tender scope and budget.\n");
+
         return prompt.toString();
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        if (value == null) {
+            return fallback;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? fallback : trimmed;
     }
 
     private GammaGenerationRequest buildGammaRequest(String prompt, String language) {
