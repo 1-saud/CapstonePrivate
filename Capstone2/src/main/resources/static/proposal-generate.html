@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Proposal (AI) - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: #ffffff;
+            width: 900px;
+            max-width: 95vw;
+            padding: 24px 28px 26px;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        h1 {
+            margin: 4px 0 4px;
+            text-align: center;
+            font-size: 24px;
+            color: #111827;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.16);
+        }
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            gap: 14px;
+            margin-top: 4px;
+        }
+        .row > div { flex: 1; }
+
+        .helper {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        button.primary {
+            margin-top: 18px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            background: #2563eb;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button.primary:hover { background: #1d4ed8; }
+        button.primary:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .secondary-btn {
+            padding: 9px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            background: #111827;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .secondary-btn.outline {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            color: #111827;
+        }
+        .secondary-btn:hover {
+            opacity: 0.9;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            display: none;
+        }
+        .message.success {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
+        .links-box {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #f9fafb;
+            border: 1px dashed #e5e7eb;
+            font-size: 12px;
+            display: none;
+        }
+        .links-box a {
+            color: #2563eb;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .links-box a:hover { text-decoration: underline; }
+
+        .actions-box {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #fefce8;
+            border: 1px solid #facc15;
+            font-size: 12px;
+            display: none;
+        }
+        .actions-header {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #78350f;
+        }
+        .status-line {
+            margin-bottom: 6px;
+            color: #92400e;
+        }
+        .buttons-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>Generate Proposal (AI)</h1>
+    <div class="subtitle">
+        Vendor selects a tender, language, and optional notes.<br>
+        Backend will call Gamma + AI, create a Proposal row, and return links.
+    </div>
+
+    <form id="generateForm" onsubmit="handleGenerate(event)">
+        <div class="row">
+            <div>
+                <label for="tenderSelect">Select Tender</label>
+                <select id="tenderSelect" required>
+                    <option value="">Loading open tenders...</option>
+                </select>
+                <div class="helper">
+                    * Loaded from <code>/api/v1/tenders/status/OPEN</code>
+                </div>
+            </div>
+
+            <div>
+                <label for="languageSelect">Language</label>
+                <select id="languageSelect" required>
+                    <option value="Arabic">Arabic</option>
+                    <option value="English">English</option>
+                </select>
+                <div class="helper">
+                    This will be used when building the AI prompt.
+                </div>
+            </div>
+        </div>
+
+        <label for="notes">Additional Notes (optional)</label>
+        <textarea id="notes"
+                  placeholder="Anything specific you want the AI to focus on? Scope, technologies, contract duration, references, etc."></textarea>
+
+        <button class="primary" type="submit" id="generateBtn">
+            <span>🤖</span>
+            <span id="btnText">Generate Proposal</span>
+        </button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <!-- روابط Gamma / PDF / PPTX -->
+    <div id="linksBox" class="links-box">
+        <div><strong>Gamma presentation:</strong> <a id="gammaLink" href="#" target="_blank"></a></div>
+        <div id="pdfRow" style="margin-top:4px; display:none;">
+            <strong>PDF export:</strong> <a id="pdfLink" href="#" target="_blank"></a>
+        </div>
+        <div id="pptxRow" style="margin-top:4px; display:none;">
+            <strong>PPTX export:</strong> <a id="pptxLink" href="#" target="_blank"></a>
+        </div>
+    </div>
+
+    <!-- حالة العرض + زر الذهاب لـ My Proposals -->
+    <div id="actionsBox" class="actions-box">
+        <div class="actions-header">Proposal status & next steps</div>
+        <div class="status-line">
+            Current proposal status:
+            <strong id="proposalStatus">NEEDS_CHANGES (pending client decision)</strong>
+        </div>
+        <div class="buttons-row">
+            <!-- لما تبني تعميد/إرسال للعميل نقدر نضيف زر هنا -->
+            <button type="button" class="secondary-btn outline" onclick="openMyProposals()">
+                📂 Go to My Proposals
+            </button>
+        </div>
+    </div>
+
+    <div class="note">
+        • On success, backend returns a <code>Proposal</code> entity (id, status, gammaShareLink, pdfUrl, ...).<br>
+        • This page reads <code>currentUserId</code>, <code>currentUserName</code>, <code>currentUserRole</code> from <code>localStorage</code>.
+    </div>
+</div>
+
+<script>
+    let currentVendorId = null;
+    let lastProposal = null; // آخر Proposal رجع من /generate
+
+    async function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        // لازم يكون Vendor
+        if (!id || role !== "VENDOR") {
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        currentVendorId = parseInt(id, 10);
+        document.getElementById("userInfo").textContent =
+            "Vendor: " + name + " (ID: " + id + ")";
+
+        await loadOpenTenders();
+    }
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    function showMessage(type, text) {
+        const msg = document.getElementById("message");
+        msg.className = "message " + type;
+        msg.textContent = text;
+        msg.style.display = "block";
+    }
+
+    function clearMessage() {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.textContent = "";
+        msg.style.display = "none";
+    }
+
+    function setLoading(isLoading) {
+        const btn = document.getElementById("generateBtn");
+        const text = document.getElementById("btnText");
+        btn.disabled = isLoading;
+        text.textContent = isLoading ? "Generating, please wait..." : "Generate Proposal";
+    }
+
+    async function loadOpenTenders() {
+        const select = document.getElementById("tenderSelect");
+        select.innerHTML = "<option value=''>Loading...</option>";
+
+        try {
+            const res = await fetch("/api/v1/tenders/status/OPEN");
+            if (!res.ok) {
+                select.innerHTML = "<option value=''>Failed to load tenders</option>";
+                return;
+            }
+
+            const tenders = await res.json();
+            if (!Array.isArray(tenders) || tenders.length === 0) {
+                select.innerHTML = "<option value=''>No open tenders available</option>";
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectedId = urlParams.get("tenderId");
+
+            select.innerHTML = "<option value=''>-- Select a tender --</option>";
+            tenders.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.id;
+                opt.textContent = "#" + t.id + " - " + t.title;
+                if (preselectedId && parseInt(preselectedId, 10) === t.id) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+
+        } catch (e) {
+            console.error(e);
+            select.innerHTML = "<option value=''>Error loading tenders</option>";
+        }
+    }
+
+    async function handleGenerate(event) {
+        event.preventDefault();
+        clearMessage();
+        document.getElementById("linksBox").style.display = "none";
+        document.getElementById("actionsBox").style.display = "none";
+        lastProposal = null;
+
+        const tenderId = parseInt(document.getElementById("tenderSelect").value, 10);
+        const language = document.getElementById("languageSelect").value;
+        const notes = document.getElementById("notes").value.trim();
+
+        if (!tenderId) {
+            showMessage("error", "Please select a tender first.");
+            return;
+        }
+
+        const payload = {
+            vendorId: currentVendorId,
+            tenderId: tenderId,
+            language: language,
+            notes: notes
+        };
+
+        setLoading(true);
+
+        try {
+            const res = await fetch("/api/v1/proposals/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                const msg = data.message || "Failed to generate proposal.";
+                showMessage("error", msg);
+                setLoading(false);
+                return;
+            }
+
+            // data = Proposal entity from backend
+            lastProposal = data;
+
+            showMessage("success", "Proposal generated and stored successfully.");
+            fillLinksBox(data);
+            updateActionsBox(data);
+
+        } catch (e) {
+            console.error(e);
+            showMessage("error", "Error while calling generate API: " + e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function fillLinksBox(data) {
+        const linksBox = document.getElementById("linksBox");
+        const gammaLink = document.getElementById("gammaLink");
+        const pdfRow = document.getElementById("pdfRow");
+        const pdfLink = document.getElementById("pdfLink");
+        const pptxRow = document.getElementById("pptxRow");
+        const pptxLink = document.getElementById("pptxLink");
+
+        let hasAnyLink = false;
+
+        if (data.gammaShareLink) {
+            gammaLink.href = data.gammaShareLink;
+            gammaLink.textContent = data.gammaShareLink;
+            hasAnyLink = true;
+        } else {
+            gammaLink.removeAttribute("href");
+            gammaLink.textContent = "";
+        }
+
+        if (data.pdfUrl) {
+            pdfRow.style.display = "block";
+            pdfLink.href = data.pdfUrl;
+            pdfLink.textContent = data.pdfUrl;
+            hasAnyLink = true;
+        } else {
+            pdfRow.style.display = "none";
+        }
+
+        if (data.pptxUrl) {
+            pptxRow.style.display = "block";
+            pptxLink.href = data.pptxUrl;
+            pptxLink.textContent = data.pptxUrl;
+            hasAnyLink = true;
+        } else {
+            pptxRow.style.display = "none";
+        }
+
+        linksBox.style.display = hasAnyLink ? "block" : "none";
+    }
+
+    function updateActionsBox(data) {
+        const actionsBox = document.getElementById("actionsBox");
+        const statusSpan = document.getElementById("proposalStatus");
+
+        const status = (data.status || "NEEDS_CHANGES").toUpperCase();
+        statusSpan.textContent = status + " (pending client decision)";
+        actionsBox.style.display = "block";
+    }
+
+    function openMyProposals() {
+        window.location.href = "/proposal-list.html"; // اسم صفحتك My Proposals
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>

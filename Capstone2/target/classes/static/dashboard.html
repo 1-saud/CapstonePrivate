@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capstone2 – Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 620px;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            text-align: center;
+            font-size: 24px;
+            color: #111827;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .role-label {
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 16px;
+            color: #4b5563;
+        }
+
+        .role-label span {
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 14px 0 8px;
+            color: #374151;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        button.secondary {
+            background: #111827;
+        }
+
+        button.outline {
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .logout-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .card {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <div class="user-info" id="userInfo"></div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <h1>Dashboard</h1>
+    <div class="subtitle">AI-Powered Tender Proposal Generator</div>
+
+    <div class="role-label">
+        Current role: <span id="roleDisplay"></span>
+    </div>
+
+    <!-- CLIENT VIEW -->
+    <div id="clientView" class="card hidden">
+        <div class="section-title">Client Actions</div>
+        <div class="buttons-grid">
+            <button onclick="goTo('tender-create.html')">➕ Create Tender</button>
+            <button onclick="goTo('tender-list.html?mode=client')">📋 My Tenders</button>
+            <button onclick="goTo('proposal-list.html?mode=client')">📊 Proposals on My Tenders</button>
+            <button class="outline" onclick="goTo('profile.html')">👤 My Profile</button>
+        </div>
+    </div>
+
+    <!-- VENDOR VIEW -->
+    <div id="vendorView" class="card hidden">
+        <div class="section-title">Vendor Actions</div>
+        <div class="buttons-grid">
+            <button onclick="goTo('tender-list.html?mode=vendor')">🧾 Open Tenders</button>
+            <button onclick="goTo('proposal-generate.html')">🤖 Generate Proposal (AI)</button>
+            <button onclick="goTo('proposal-list.html?mode=vendor')">📦 My Proposals</button>
+            <button class="outline" onclick="goTo('company-profile.html')">🏢 Company Profile</button>
+        </div>
+    </div>
+
+    <div class="note">
+        • This page reads currentUserId / currentUserName / currentUserRole from localStorage.<br>
+        • Make sure you logged in via <code>auth.html</code> first.
+    </div>
+</div>
+
+<script>
+    function initDashboard() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        const userInfo = document.getElementById("userInfo");
+        const roleDisplay = document.getElementById("roleDisplay");
+        const clientView = document.getElementById("clientView");
+        const vendorView = document.getElementById("vendorView");
+
+        if (!id || !role) {
+            // ما فيه مستخدم مسجّل → رجعه لصفحة auth
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        userInfo.textContent = "Logged in as: " + name + " (ID: " + id + ")";
+        roleDisplay.textContent = role;
+
+        if (role === "CLIENT") {
+            clientView.classList.remove("hidden");
+            vendorView.classList.add("hidden");
+        } else if (role === "VENDOR") {
+            vendorView.classList.remove("hidden");
+            clientView.classList.add("hidden");
+        } else {
+            clientView.classList.add("hidden");
+            vendorView.classList.add("hidden");
+        }
+    }
+
+    function goTo(path) {
+        window.location.href = "/" + path;
+    }
+
+    function logout() {
+        localStorage.removeItem("currentUserId");
+        localStorage.removeItem("currentUserName");
+        localStorage.removeItem("currentUserRole");
+        window.location.href = "/auth.html";
+    }
+
+    initDashboard();
+</script>
+
+</body>
+</html>

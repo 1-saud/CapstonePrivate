@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Tender - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 720px;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            text-align: center;
+            color: #111827;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.15);
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .row > div {
+            flex: 1;
+        }
+
+        button.submit-btn {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        button.submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .message.success {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>Create Tender</h1>
+    <div class="subtitle">Client creates a new tender that Vendors can see and respond to.</div>
+
+    <form id="tenderForm" onsubmit="handleCreateTender(event)">
+        <label for="title">Title</label>
+        <input type="text" id="title" required minlength="5" maxlength="200">
+
+        <label for="description">Description</label>
+        <textarea id="description" required></textarea>
+
+        <div class="row">
+            <div>
+                <label for="budgetMin">Minimum Budget (SAR)</label>
+                <input type="number" id="budgetMin" min="0" value="0">
+            </div>
+            <div>
+                <label for="budgetMax">Maximum Budget (SAR)</label>
+                <input type="number" id="budgetMax" min="0">
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <label for="deadline">Deadline</label>
+                <input type="date" id="deadline" required>
+            </div>
+            <div>
+                <label for="status">Status</label>
+                <select id="status" required>
+                    <option value="OPEN">OPEN</option>
+                    <option value="CLOSED">CLOSED</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Create Tender</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="note">
+        • clientId will be taken automatically from localStorage (currentUserId).<br>
+        • This calls <code>POST /api/v1/tenders/add</code>.
+    </div>
+</div>
+
+<script>
+    function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        if (!id || role !== "CLIENT") {
+            window.location.href = "/auth.html";
+            return;
+        }
+        document.getElementById("userInfo").textContent =
+            "Client: " + name + " (ID: " + id + ")";
+    }
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    async function handleCreateTender(event) {
+        event.preventDefault();
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.textContent = "";
+        msg.style.display = "none";
+
+        const clientId = parseInt(localStorage.getItem("currentUserId"), 10);
+
+        const title = document.getElementById("title").value.trim();
+        const description = document.getElementById("description").value.trim();
+        const budgetMin = document.getElementById("budgetMin").value || 0;
+        const budgetMax = document.getElementById("budgetMax").value || 0;
+        const deadline = document.getElementById("deadline").value;
+        const status = document.getElementById("status").value;
+
+        try {
+            const res = await fetch("/api/v1/tenders/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    budgetMin: parseInt(budgetMin, 10),
+                    budgetMax: parseInt(budgetMax, 10),
+                    deadline,
+                    status,
+                    clientId
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to create tender";
+                msg.style.display = "block";
+                return;
+            }
+
+            msg.classList.add("success");
+            msg.textContent = data.message || "Tender added successfully";
+            msg.style.display = "block";
+
+            // reset form quickly
+            document.getElementById("tenderForm").reset();
+            document.getElementById("status").value = "OPEN";
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error calling API: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>

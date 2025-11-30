@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: #ffffff;
+            width: 600px;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        h1 {
+            margin: 0 0 4px;
+            text-align: center;
+            font-size: 22px;
+            color: #111827;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #374151;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.15);
+        }
+        button {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: #2563eb;
+            color: #ffffff;
+        }
+        button:hover { background: #1d4ed8; }
+        .message {
+            margin-top: 14px;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        .message.success {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>My Profile</h1>
+    <div class="subtitle">
+        Update your account information (name, email, password).
+    </div>
+
+    <form id="profileForm" onsubmit="handleSave(event)">
+        <label for="name">Name</label>
+        <input type="text" id="name" required minlength="3">
+
+        <label for="email">Email</label>
+        <input type="text" id="email" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required minlength="6">
+
+        <button type="submit">Save Changes</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="note">
+        • This calls <code>GET /api/v1/users/get/{id}</code> on load and
+        <code>PUT /api/v1/users/update/{id}</code> on save.
+    </div>
+</div>
+
+<script>
+    let currentUserId = null;
+    let currentUserRole = null;
+
+    async function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        if (!id || !role) {
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        currentUserId = parseInt(id, 10);
+        currentUserRole = role;
+
+        document.getElementById("userInfo").textContent =
+            name + " (" + role + "), ID: " + id;
+
+        await loadUser();
+    }
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    async function loadUser() {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.style.display = "none";
+
+        try {
+            const res = await fetch(`/api/v1/users/get/${currentUserId}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to load user.";
+                msg.style.display = "block";
+                return;
+            }
+
+            document.getElementById("name").value = data.name || "";
+            document.getElementById("email").value = data.email || "";
+            document.getElementById("password").value = data.password || "";
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    async function handleSave(event) {
+        event.preventDefault();
+
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.textContent = "";
+        msg.style.display = "none";
+
+        const payload = {
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value.trim(),
+            role: currentUserRole
+        };
+
+        try {
+            const res = await fetch(`/api/v1/users/update/${currentUserId}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to update user.";
+                msg.style.display = "block";
+                return;
+            }
+
+            msg.classList.add("success");
+            msg.textContent = data.message || "Profile updated successfully.";
+            msg.style.display = "block";
+
+            // حدث الاسم في localStorage عشان يظهر في الداشبورد
+            localStorage.setItem("currentUserName", payload.name);
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>

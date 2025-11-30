@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tenders - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            margin-top: 30px;
+            background: #ffffff;
+            width: 900px;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            text-align: center;
+            color: #111827;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .tag {
+            padding: 3px 7px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-open {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tag-closed {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-sm {
+            padding: 5px 8px;
+            font-size: 11px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            color: #ffffff;
+            background: #2563eb;
+        }
+
+        .btn-sm.secondary {
+            background: #111827;
+        }
+
+        .btn-sm:hover {
+            opacity: 0.9;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .message.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            display: block;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>Tenders</h1>
+    <div class="subtitle" id="subtitle"></div>
+
+    <div id="message" class="message"></div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Deadline</th>
+            <th>Budget (Min–Max)</th>
+            <th>Status</th>
+            <th>Client</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="tendersBody">
+        <!-- rows -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode") || "client";
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        if (!id || !role) {
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        document.getElementById("userInfo").textContent =
+            name + " (" + role + "), ID: " + id;
+
+        const subtitle = document.getElementById("subtitle");
+        if (role === "CLIENT") {
+            subtitle.textContent = "Viewing your tenders (Client mode).";
+            loadClientTenders(id);
+        } else {
+            subtitle.textContent = "Viewing open tenders available for Vendors.";
+            loadVendorTenders();
+        }
+    }
+
+    async function loadClientTenders(clientId) {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.style.display = "none";
+
+        try {
+            const res = await fetch("/api/v1/tenders/client/" + clientId);
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to load tenders.";
+                msg.style.display = "block";
+                return;
+            }
+
+            renderTenders(data, "CLIENT");
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    async function loadVendorTenders() {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.style.display = "none";
+
+        try {
+            // هنا استخدمنا /status/OPEN ، عدلها لو عندك endpoint مختلف للأوبن
+            const res = await fetch("/api/v1/tenders/status/OPEN");
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to load open tenders.";
+                msg.style.display = "block";
+                return;
+            }
+
+            renderTenders(data, "VENDOR");
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    function renderTenders(tenders, role) {
+        const tbody = document.getElementById("tendersBody");
+        tbody.innerHTML = "";
+
+        if (!Array.isArray(tenders) || tenders.length === 0) {
+            document.getElementById("message").className = "message info";
+            document.getElementById("message").textContent = "No tenders found.";
+            document.getElementById("message").style.display = "block";
+            return;
+        }
+
+        tenders.forEach(t => {
+            const tr = document.createElement("tr");
+
+            const statusTagClass =
+                t.status === "OPEN" ? "tag tag-open" : "tag tag-closed";
+
+            tr.innerHTML = `
+                <td>${t.id}</td>
+                <td>${t.title}</td>
+                <td>${t.deadline || ""}</td>
+                <td>${t.budgetMin || 0} - ${t.budgetMax || 0}</td>
+                <td><span class="${statusTagClass}">${t.status}</span></td>
+                <td>${t.clientId}</td>
+                <td id="actions-${t.id}"></td>
+            `;
+
+            tbody.appendChild(tr);
+
+            const actionsCell = document.getElementById("actions-" + t.id);
+            if (role === "CLIENT") {
+                // Client actions: view proposals later
+                const btnView = document.createElement("button");
+                btnView.className = "btn-sm secondary";
+                btnView.textContent = "View Proposals";
+                btnView.onclick = () => {
+                    window.location.href =
+                        "/proposal-list.html?mode=client&tenderId=" + t.id;
+                };
+                actionsCell.appendChild(btnView);
+            } else {
+                // Vendor actions: generate proposal
+                const btnGen = document.createElement("button");
+                btnGen.className = "btn-sm";
+                btnGen.textContent = "Generate Proposal";
+                btnGen.onclick = () => {
+                    window.location.href =
+                        "/proposal-generate.html?tenderId=" + t.id;
+                };
+                actionsCell.appendChild(btnGen);
+            }
+        });
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>

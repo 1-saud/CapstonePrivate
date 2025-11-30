@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capstone2 - Users</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            background: #fff;
+            padding: 15px;
+            width: 320px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #27ae60;
+            color: #fff;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #219150;
+        }
+        .user-card {
+            background: #fff;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Capstone2 - Manage Users</h1>
+
+<!-- Add User Form -->
+<form id="addUserForm">
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="CLIENT">CLIENT</option>
+        <option value="VENDOR">VENDOR</option>
+    </select>
+    <button type="submit">Add User</button>
+</form>
+
+<button onclick="loadUsers()">Load Users</button>
+
+<hr>
+
+<!-- Users Container -->
+<div id="users-container"></div>
+
+<script>
+    const API_BASE = "/api/v1/users";
+
+    // Add User Form Submit
+    document.getElementById("addUserForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const user = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+            role: document.getElementById("role").value
+        };
+
+        const res = await fetch(API_BASE + "/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
+        });
+
+        const msg = await res.json();
+        alert(msg.message || JSON.stringify(msg));
+
+        document.getElementById("addUserForm").reset();
+        loadUsers();
+    });
+
+    // Load All Users
+    async function loadUsers() {
+        const res = await fetch(API_BASE + "/get");
+        const users = await res.json();
+
+        const container = document.getElementById("users-container");
+        container.innerHTML = "";
+
+        users.forEach(u => {
+            const card = document.createElement("div");
+            card.classList.add("user-card");
+            card.innerHTML = `
+                <strong>${u.name}</strong> <br>
+                Email: ${u.email} <br>
+                Role: ${u.role} <br>
+                Created: ${u.createdAt || "N/A"}
+            `;
+            container.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>

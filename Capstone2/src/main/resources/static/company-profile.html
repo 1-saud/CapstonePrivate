@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Company Profile - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: #ffffff;
+            width: 760px;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        h1 {
+            margin: 0 0 4px;
+            text-align: center;
+            font-size: 22px;
+            color: #111827;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #374151;
+        }
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.15);
+        }
+        .row { display: flex; gap: 12px; }
+        .row > div { flex: 1; }
+
+        button {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: #2563eb;
+            color: #ffffff;
+        }
+        button:hover { background: #1d4ed8; }
+
+        .message {
+            margin-top: 14px;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        .message.success {
+            background: #ecfdf3;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>Company Profile</h1>
+    <div class="subtitle">
+        Vendor profile used by AI when generating technical & financial proposals.
+    </div>
+
+    <form id="profileForm" onsubmit="handleSave(event)">
+        <label for="companyName">Company Name</label>
+        <input type="text" id="companyName" required placeholder="e.g. Fonda Tech Solutions">
+
+        <label for="summary">Company Summary (services + experience)</label>
+        <textarea id="summary"
+                  placeholder="Describe your main services, government clients, case studies, certifications...
+This text will be sent to the AI to customize proposals."></textarea>
+
+        <div class="row">
+            <div>
+                <label for="website">Website</label>
+                <input type="text" id="website" placeholder="https://your-company.com">
+            </div>
+            <div>
+                <label for="country">Country</label>
+                <input type="text" id="country" placeholder="Saudi Arabia">
+            </div>
+        </div>
+
+        <label for="city">City</label>
+        <input type="text" id="city" placeholder="Riyadh">
+
+        <button type="submit">Save Profile</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="note">
+        • Load: <code>GET /api/v1/company-profiles/vendor/{vendorId}</code><br>
+        • Save: <code>POST /api/v1/company-profiles/add</code> or
+        <code>PUT /api/v1/company-profiles/update/{id}</code> (same Entity fields used later في الـ AI prompt).
+    </div>
+</div>
+
+<script>
+    let currentVendorId = null;
+    let currentProfileId = null;
+
+    async function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        // نخليها للـ Vendor فقط، لو حاب لاحقًا تفتحها للـ Client غير الشرط
+        if (!id || role !== "VENDOR") {
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        currentVendorId = parseInt(id, 10);
+
+        document.getElementById("userInfo").textContent =
+            "Vendor: " + name + " (ID: " + id + ")";
+
+        await loadProfile();
+    }
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    async function loadProfile() {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.style.display = "none";
+
+        try {
+            const res = await fetch(`/api/v1/company-profiles/vendor/${currentVendorId}`);
+
+            if (!res.ok) {
+                // لو 400 من الكنترولر "Company profile not found"
+                // نعتبرها حالة no profile yet ونخلي الفورم فاضية
+                return;
+            }
+
+            const data = await res.json();
+
+            currentProfileId = data.id;
+
+            document.getElementById("companyName").value = data.companyName || "";
+            document.getElementById("summary").value = data.summary || "";
+            document.getElementById("website").value = data.website || "";
+            document.getElementById("country").value = data.country || "";
+            document.getElementById("city").value = data.city || "";
+
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error loading profile: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    async function handleSave(event) {
+        event.preventDefault();
+
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.textContent = "";
+        msg.style.display = "none";
+
+        const payload = {
+            vendorId: currentVendorId,
+            companyName: document.getElementById("companyName").value.trim(),
+            summary: document.getElementById("summary").value.trim(),
+            website: document.getElementById("website").value.trim(),
+            country: document.getElementById("country").value.trim(),
+            city: document.getElementById("city").value.trim()
+        };
+
+        const url = currentProfileId
+            ? `/api/v1/company-profiles/update/${currentProfileId}`
+            : "/api/v1/company-profiles/add";
+
+        const method = currentProfileId ? "PUT" : "POST";
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                msg.classList.add("error");
+                msg.textContent = data.message || "Failed to save profile.";
+                msg.style.display = "block";
+                return;
+            }
+
+            msg.classList.add("success");
+            msg.textContent = data.message || "Profile saved successfully.";
+            msg.style.display = "block";
+
+            // لو تم الإنشاء لأول مرة خذ الـ id من الرد لو رجع
+            if (!currentProfileId && data.id) {
+                currentProfileId = data.id;
+            }
+        } catch (e) {
+            msg.classList.add("error");
+            msg.textContent = "Error saving profile: " + e;
+            msg.style.display = "block";
+        }
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>

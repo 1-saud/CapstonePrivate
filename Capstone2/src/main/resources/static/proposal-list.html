@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Proposals - Capstone2</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .container {
+            background: #ffffff;
+            width: 1000px;
+            max-width: 96vw;
+            margin: 32px auto;
+            padding: 24px 28px 26px;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+        .user-info {
+            font-size: 13px;
+            color: #4b5563;
+        }
+        h1 {
+            margin: 6px 0 4px;
+            text-align: center;
+            font-size: 24px;
+            color: #111827;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 18px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            color: #4b5563;
+        }
+
+        select {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            font-size: 12px;
+            background: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        thead {
+            background: #f9fafb;
+        }
+        th, td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 12px;
+        }
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-new { background:#eff6ff; color:#1d4ed8; }
+        .badge-approved { background:#ecfdf3; color:#15803d; }
+        .badge-rejected { background:#fef2f2; color:#b91c1c; }
+        .badge-needs { background:#fffbeb; color:#92400e; }
+
+        .links a {
+            display: block;
+            color: #2563eb;
+            text-decoration: none;
+            margin-bottom: 2px;
+            word-break: break-all;
+        }
+        .links a:hover { text-decoration: underline; }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 10px 15px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .dot-approved { background:#16a34a; }
+        .dot-rejected { background:#dc2626; }
+        .dot-needs { background:#f97316; }
+        .dot-new { background:#2563eb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-row">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="user-info" id="userInfo"></div>
+    </div>
+
+    <h1>My Proposals</h1>
+    <div class="subtitle">
+        All AI-generated proposals you have created as a Vendor.
+        You can open the Gamma presentation or download PDF/PPTX (if available).
+    </div>
+
+    <div class="filters">
+        <div class="pill">
+            <span>Role:</span>
+            <strong id="roleLabel">VENDOR</strong>
+        </div>
+
+        <div class="pill">
+            <span>Filter by status:</span>
+            <select id="statusFilter" onchange="renderTable()">
+                <option value="ALL">All</option>
+                <option value="NEEDS_CHANGES">Needs Review</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="tableWrapper"></div>
+
+    <div class="note">
+        • Data loaded from <code>/api/v1/proposals/vendor/{vendorId}</code>
+        • Tender titles (if available) are fetched individually from <code>/api/v1/tenders/get/{id}</code>.
+        • Status values follow your model validation: <code>APPROVED</code>, <code>REJECTED</code>, <code>NEEDS_CHANGES</code>.
+    </div>
+</div>
+
+<script>
+    let currentVendorId = null;
+    let proposals = [];
+    const tenderTitles = {}; // tenderId -> title
+
+    async function initPage() {
+        const id = localStorage.getItem("currentUserId");
+        const name = localStorage.getItem("currentUserName");
+        const role = localStorage.getItem("currentUserRole");
+
+        if (!id || role !== "VENDOR") {
+            window.location.href = "/auth.html";
+            return;
+        }
+
+        currentVendorId = parseInt(id, 10);
+        document.getElementById("userInfo").textContent =
+            "Logged in as: " + name + " (ID: " + id + ")";
+        document.getElementById("roleLabel").textContent = role;
+
+        await loadProposals();
+    }
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    async function loadProposals() {
+        const wrapper = document.getElementById("tableWrapper");
+        wrapper.innerHTML = "<div class='empty-state'>Loading proposals...</div>";
+
+        try {
+            const res = await fetch("/api/v1/proposals/vendor/" + currentVendorId);
+            if (!res.ok) {
+                wrapper.innerHTML = "<div class='empty-state'>Failed to load proposals.</div>";
+                return;
+            }
+
+            proposals = await res.json();
+
+            if (!Array.isArray(proposals) || proposals.length === 0) {
+                wrapper.innerHTML = "<div class='empty-state'>You have not generated any proposals yet.</div>";
+                return;
+            }
+
+            // جمع كل tenderId الفريدة
+            const uniqueTenderIds = [...new Set(proposals.map(p => p.tenderId))];
+            await loadTenderTitles(uniqueTenderIds);
+
+            renderTable();
+
+        } catch (e) {
+            console.error(e);
+            wrapper.innerHTML = "<div class='empty-state'>Error loading proposals.</div>";
+        }
+    }
+
+    async function loadTenderTitles(ids) {
+        for (const id of ids) {
+            if (!id || tenderTitles[id]) continue;
+            try {
+                const res = await fetch("/api/v1/tenders/get/" + id);
+                if (!res.ok) continue;
+                const tender = await res.json();
+                tenderTitles[id] = tender.title || ("Tender #" + id);
+            } catch (e) {
+                console.error("Error loading tender " + id, e);
+            }
+        }
+    }
+
+    function renderTable() {
+        const wrapper = document.getElementById("tableWrapper");
+
+        if (!Array.isArray(proposals) || proposals.length === 0) {
+            wrapper.innerHTML = "<div class='empty-state'>You have not generated any proposals yet.</div>";
+            return;
+        }
+
+        const statusFilter = document.getElementById("statusFilter").value;
+        const filtered = proposals.filter(p => {
+            if (statusFilter === "ALL") return true;
+            return (p.status || "").toUpperCase() === statusFilter;
+        });
+
+        if (filtered.length === 0) {
+            wrapper.innerHTML = "<div class='empty-state'>No proposals match this filter.</div>";
+            return;
+        }
+
+        let html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tender</th>
+                  <th>Status</th>
+                  <th>AI Provider</th>
+                  <th>Created At</th>
+                  <th>Links</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        filtered.forEach(p => {
+            const status = (p.status || "").toUpperCase();
+            let badgeClass = "badge-new";
+            let dotClass = "dot-new";
+            let label = status || "NEW";
+
+            if (status === "APPROVED") {
+                badgeClass = "badge-approved";
+                dotClass = "dot-approved";
+            } else if (status === "REJECTED") {
+                badgeClass = "badge-rejected";
+                dotClass = "dot-rejected";
+            } else if (status === "NEEDS_CHANGES") {
+                badgeClass = "badge-needs";
+                dotClass = "dot-needs";
+                label = "NEEDS_CHANGES";
+            }
+
+            const tenderTitle = tenderTitles[p.tenderId] || ("Tender #" + p.tenderId);
+
+            const createdAt = p.createdAt ? p.createdAt.replace("T", " ").substring(0, 19) : "-";
+            const provider = p.aiProvider || "GAMMA";
+
+            let linksHtml = "";
+            if (p.gammaShareLink) {
+                linksHtml += `<a href="${p.gammaShareLink}" target="_blank">Gamma Presentation</a>`;
+            }
+            if (p.pdfUrl) {
+                linksHtml += `<a href="${p.pdfUrl}" target="_blank">PDF Export</a>`;
+            }
+            if (p.pptxUrl) {
+                linksHtml += `<a href="${p.pptxUrl}" target="_blank">PPTX Export</a>`;
+            }
+            if (!linksHtml) {
+                linksHtml = "<span style='color:#9ca3af;'>No links yet</span>";
+            }
+
+            html += `
+                <tr>
+                  <td>#${p.id}</td>
+                  <td>
+                    <div><strong>${tenderTitle}</strong></div>
+                    <div style="font-size:11px;color:#9ca3af;">Tender ID: ${p.tenderId}</div>
+                  </td>
+                  <td>
+                    <span class="badge ${badgeClass}">
+                      <span class="status-dot ${dotClass}"></span>${label}
+                    </span>
+                  </td>
+                  <td>${provider}</td>
+                  <td>${createdAt}</td>
+                  <td class="links">${linksHtml}</td>
+                </tr>
+            `;
+        });
+
+        html += "</tbody></table>";
+        wrapper.innerHTML = html;
+    }
+
+    initPage();
+</script>
+
+</body>
+</html>
