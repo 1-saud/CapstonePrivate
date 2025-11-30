@@ -70,6 +70,7 @@
             border-radius: 10px;
             border: 1px solid #d1d5db;
             font-size: 14px;
+            background: #ffffff;
         }
         select:focus,
         textarea:focus {
@@ -86,8 +87,9 @@
             display: flex;
             gap: 14px;
             margin-top: 4px;
+            flex-wrap: wrap;
         }
-        .row > div { flex: 1; }
+        .row > div { flex: 1; min-width: 220px; }
 
         .helper {
             font-size: 12px;
@@ -118,13 +120,13 @@
         }
 
         .secondary-btn {
-            padding: 9px 14px;
+            padding: 10px 16px;
             border-radius: 999px;
             border: none;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 500;
-            background: #111827;
+            font-weight: 600;
+            background: #2563eb;
             color: #ffffff;
             display: inline-flex;
             align-items: center;
@@ -137,6 +139,10 @@
         }
         .secondary-btn:hover {
             opacity: 0.9;
+        }
+        .secondary-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
         }
 
         .message {
@@ -158,11 +164,17 @@
             border: 1px solid #fecaca;
             display: block;
         }
+        .message.info {
+            background: #eef2ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+            display: block;
+        }
 
         .links-box {
             margin-top: 10px;
-            padding: 8px 10px;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
             background: #f9fafb;
             border: 1px dashed #e5e7eb;
             font-size: 12px;
@@ -174,11 +186,14 @@
             word-break: break-all;
         }
         .links-box a:hover { text-decoration: underline; }
+        .muted {
+            color: #9ca3af;
+        }
 
         .actions-box {
-            margin-top: 12px;
-            padding: 10px 12px;
-            border-radius: 10px;
+            margin-top: 16px;
+            padding: 16px 18px;
+            border-radius: 12px;
             background: #fefce8;
             border: 1px solid #facc15;
             font-size: 12px;
@@ -186,21 +201,71 @@
         }
         .actions-header {
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             color: #78350f;
+            font-size: 13px;
         }
-        .status-line {
-            margin-bottom: 6px;
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .chip-draft { background: #eff6ff; color: #1d4ed8; }
+        .chip-submitted { background: #ede9fe; color: #5b21b6; }
+        .chip-needs { background: #fffbeb; color: #92400e; }
+        .chip-approved { background: #ecfdf3; color: #15803d; }
+        .chip-rejected { background: #fef2f2; color: #b91c1c; }
+
+        .feedback-box {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #fde68a;
+            background: #fffbeb;
             color: #92400e;
+            display: none;
         }
-        .buttons-row {
+        .feedback-box h4 {
+            margin: 0 0 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .feedback-box p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .submit-area {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #facc15;
+            display: none;
+        }
+        .submit-area textarea {
+            min-height: 70px;
+            font-size: 12px;
+        }
+        .submit-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .info-line {
+            margin-top: 8px;
+            color: #6b7280;
+            font-size: 11px;
         }
 
         .note {
-            margin-top: 10px;
+            margin-top: 16px;
             font-size: 11px;
             color: #9ca3af;
         }
@@ -217,7 +282,7 @@
     <h1>Generate Proposal (AI)</h1>
     <div class="subtitle">
         Vendor selects a tender, language, and optional notes.<br>
-        Backend will call Gamma + AI, create a Proposal row, and return links.
+        Backend calls Gamma to create a proposal and store links automatically.
     </div>
 
     <form id="generateForm" onsubmit="handleGenerate(event)">
@@ -239,14 +304,14 @@
                     <option value="English">English</option>
                 </select>
                 <div class="helper">
-                    This will be used when building the AI prompt.
+                    Used while building the AI prompt (ar / en for Gamma).
                 </div>
             </div>
         </div>
 
         <label for="notes">Additional Notes (optional)</label>
         <textarea id="notes"
-                  placeholder="Anything specific you want the AI to focus on? Scope, technologies, contract duration, references, etc."></textarea>
+                  placeholder="Anything specific you want AI to focus on? Scope, technologies, contract duration, references, etc."></textarea>
 
         <button class="primary" type="submit" id="generateBtn">
             <span>🤖</span>
@@ -256,26 +321,47 @@
 
     <div id="message" class="message"></div>
 
-    <!-- روابط Gamma / PDF / PPTX -->
     <div id="linksBox" class="links-box">
         <div><strong>Gamma presentation:</strong> <a id="gammaLink" href="#" target="_blank"></a></div>
-        <div id="pdfRow" style="margin-top:4px; display:none;">
+        <div id="pdfRow" style="margin-top:6px; display:none;">
             <strong>PDF export:</strong> <a id="pdfLink" href="#" target="_blank"></a>
         </div>
-        <div id="pptxRow" style="margin-top:4px; display:none;">
+        <div id="pptxRow" style="margin-top:6px; display:none;">
             <strong>PPTX export:</strong> <a id="pptxLink" href="#" target="_blank"></a>
+        </div>
+        <div id="linksEmpty" class="muted" style="margin-top:6px; display:none;">
+            Gamma is still preparing exports. Refresh this page later if links are missing.
         </div>
     </div>
 
-    <!-- حالة العرض + زر الذهاب لـ My Proposals -->
     <div id="actionsBox" class="actions-box">
         <div class="actions-header">Proposal status & next steps</div>
-        <div class="status-line">
-            Current proposal status:
-            <strong id="proposalStatus">NEEDS_CHANGES (pending client decision)</strong>
+        <div>
+            <span class="status-chip chip-draft" id="statusChip">DRAFT</span>
         </div>
-        <div class="buttons-row">
-            <!-- لما تبني تعميد/إرسال للعميل نقدر نضيف زر هنا -->
+        <div class="info-line" id="submittedInfo"></div>
+        <div class="info-line" id="languageInfo"></div>
+        <div class="info-line" id="vendorNotesInfo"></div>
+
+        <div id="feedbackBox" class="feedback-box">
+            <h4>Client feedback</h4>
+            <p id="feedbackText"></p>
+        </div>
+
+        <div id="submitArea" class="submit-area">
+            <label for="submitMessage">Message to client (optional)</label>
+            <textarea id="submitMessage" placeholder="Example: Added more details about maintenance contract. Please review."></textarea>
+            <div class="submit-actions">
+                <button type="button" class="secondary-btn" id="submitBtn" onclick="submitToClient()">
+                    📤 Submit to Client
+                </button>
+                <button type="button" class="secondary-btn outline" onclick="openMyProposals()">
+                    📂 Go to My Proposals
+                </button>
+            </div>
+        </div>
+
+        <div id="submittedOnly" class="submit-area" style="border-top:none; padding-top:0; display:none;">
             <button type="button" class="secondary-btn outline" onclick="openMyProposals()">
                 📂 Go to My Proposals
             </button>
@@ -283,21 +369,28 @@
     </div>
 
     <div class="note">
-        • On success, backend returns a <code>Proposal</code> entity (id, status, gammaShareLink, pdfUrl, ...).<br>
+        • On success, backend returns a <code>Proposal</code> entity (status, gammaShareLink, pdfUrl, pptxUrl...).<br>
         • This page reads <code>currentUserId</code>, <code>currentUserName</code>, <code>currentUserRole</code> from <code>localStorage</code>.
     </div>
 </div>
 
 <script>
     let currentVendorId = null;
-    let lastProposal = null; // آخر Proposal رجع من /generate
+    let lastProposal = null;
+
+    const STATUS_CHIPS = {
+        "DRAFT": { label: "Draft – not sent to client yet", className: "chip-draft" },
+        "SUBMITTED": { label: "Submitted – waiting for client decision", className: "chip-submitted" },
+        "NEEDS_CHANGES": { label: "Needs changes – check client feedback and resubmit", className: "chip-needs" },
+        "APPROVED": { label: "Approved – proposal accepted", className: "chip-approved" },
+        "REJECTED": { label: "Rejected – proposal declined", className: "chip-rejected" }
+    };
 
     async function initPage() {
         const id = localStorage.getItem("currentUserId");
         const name = localStorage.getItem("currentUserName");
         const role = localStorage.getItem("currentUserRole");
 
-        // لازم يكون Vendor
         if (!id || role !== "VENDOR") {
             window.location.href = "/auth.html";
             return;
@@ -333,6 +426,13 @@
         const text = document.getElementById("btnText");
         btn.disabled = isLoading;
         text.textContent = isLoading ? "Generating, please wait..." : "Generate Proposal";
+    }
+
+    function setSubmitLoading(isLoading) {
+        const btn = document.getElementById("submitBtn");
+        if (!btn) return;
+        btn.disabled = isLoading;
+        btn.textContent = isLoading ? "Submitting..." : "📤 Submit to Client";
     }
 
     async function loadOpenTenders() {
@@ -375,8 +475,8 @@
     async function handleGenerate(event) {
         event.preventDefault();
         clearMessage();
-        document.getElementById("linksBox").style.display = "none";
-        document.getElementById("actionsBox").style.display = "none";
+        toggleLinks(false);
+        toggleActions(false);
         lastProposal = null;
 
         const tenderId = parseInt(document.getElementById("tenderSelect").value, 10);
@@ -413,10 +513,8 @@
                 return;
             }
 
-            // data = Proposal entity from backend
             lastProposal = data;
-
-            showMessage("success", "Proposal generated and stored successfully.");
+            showMessage("success", "Proposal generated successfully. Review links below and submit to client when ready.");
             fillLinksBox(data);
             updateActionsBox(data);
 
@@ -435,6 +533,7 @@
         const pdfLink = document.getElementById("pdfLink");
         const pptxRow = document.getElementById("pptxRow");
         const pptxLink = document.getElementById("pptxLink");
+        const linksEmpty = document.getElementById("linksEmpty");
 
         let hasAnyLink = false;
 
@@ -465,20 +564,130 @@
             pptxRow.style.display = "none";
         }
 
-        linksBox.style.display = hasAnyLink ? "block" : "none";
+        linksEmpty.style.display = hasAnyLink ? "none" : "block";
+        toggleLinks(true);
     }
 
     function updateActionsBox(data) {
-        const actionsBox = document.getElementById("actionsBox");
-        const statusSpan = document.getElementById("proposalStatus");
+        if (!data || !data.id) {
+            toggleActions(false);
+            return;
+        }
 
-        const status = (data.status || "NEEDS_CHANGES").toUpperCase();
-        statusSpan.textContent = status + " (pending client decision)";
+        const actionsBox = document.getElementById("actionsBox");
+        const statusChip = document.getElementById("statusChip");
+        const submitArea = document.getElementById("submitArea");
+        const submittedOnly = document.getElementById("submittedOnly");
+        const feedbackBox = document.getElementById("feedbackBox");
+        const feedbackText = document.getElementById("feedbackText");
+        const submitMessage = document.getElementById("submitMessage");
+        const submittedInfo = document.getElementById("submittedInfo");
+        const languageInfo = document.getElementById("languageInfo");
+        const vendorNotesInfo = document.getElementById("vendorNotesInfo");
+
         actionsBox.style.display = "block";
+
+        const status = (data.status || "DRAFT").toUpperCase();
+        const chipConfig = STATUS_CHIPS[status] || STATUS_CHIPS.DRAFT;
+        statusChip.textContent = chipConfig.label;
+        statusChip.className = "status-chip " + chipConfig.className;
+
+        languageInfo.textContent = data.language ? "Language selected: " + data.language : "";
+        vendorNotesInfo.textContent = data.vendorNotes ? "Vendor notes used in prompt: " + data.vendorNotes : "";
+
+        if (data.submittedAt) {
+            submittedInfo.textContent = "Last submitted: " + formatDateTime(data.submittedAt);
+        } else {
+            submittedInfo.textContent = status === "SUBMITTED"
+                ? "Submitted just now."
+                : "Not submitted to client yet.";
+        }
+
+        feedbackBox.style.display = "none";
+        feedbackText.textContent = "";
+
+        if (status === "NEEDS_CHANGES" && data.clientFeedback) {
+            feedbackBox.style.display = "block";
+            feedbackText.textContent = data.clientFeedback;
+        }
+        if ((status === "APPROVED" || status === "REJECTED") && data.clientFeedback) {
+            feedbackBox.style.display = "block";
+            feedbackText.textContent = data.clientFeedback;
+        }
+
+        if (status === "DRAFT" || status === "NEEDS_CHANGES") {
+            submitArea.style.display = "block";
+            submittedOnly.style.display = "none";
+            submitMessage.value = data.submissionMessage || "";
+            setSubmitLoading(false);
+        } else {
+            submitArea.style.display = "none";
+            submittedOnly.style.display = "block";
+        }
+    }
+
+    function toggleLinks(visible) {
+        const box = document.getElementById("linksBox");
+        box.style.display = visible ? "block" : "none";
+    }
+
+    function toggleActions(visible) {
+        const box = document.getElementById("actionsBox");
+        box.style.display = visible ? "block" : "none";
+    }
+
+    function formatDateTime(isoString) {
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        } catch (_) {
+            return isoString;
+        }
+    }
+
+    async function submitToClient() {
+        if (!lastProposal || !lastProposal.id) {
+            showMessage("error", "Generate a proposal before submitting.");
+            return;
+        }
+
+        clearMessage();
+        const messageInput = document.getElementById("submitMessage");
+        const payload = {
+            vendorId: currentVendorId,
+            message: messageInput.value.trim()
+        };
+
+        setSubmitLoading(true);
+
+        try {
+            const res = await fetch(`/api/v1/proposals/${lastProposal.id}/submit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                const msg = data.message || "Failed to submit proposal.";
+                showMessage("error", msg);
+                setSubmitLoading(false);
+                return;
+            }
+
+            lastProposal = data;
+            showMessage("success", "Proposal submitted to client successfully.");
+            updateActionsBox(data);
+        } catch (e) {
+            console.error(e);
+            showMessage("error", "Error while submitting proposal: " + e);
+        } finally {
+            setSubmitLoading(false);
+        }
     }
 
     function openMyProposals() {
-        window.location.href = "/proposal-list.html"; // اسم صفحتك My Proposals
+        window.location.href = "/proposal-list.html?mode=vendor";
     }
 
     initPage();

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Proposals - Capstone2</title>
+    <title>Proposals - Capstone2</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -17,10 +17,10 @@
         }
         .container {
             background: #ffffff;
-            width: 1000px;
+            width: 1100px;
             max-width: 96vw;
             margin: 32px auto;
-            padding: 24px 28px 26px;
+            padding: 26px 30px 28px;
             border-radius: 18px;
             box-shadow: 0 12px 30px rgba(0,0,0,0.08);
         }
@@ -60,13 +60,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .pill {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 6px;
             padding: 6px 12px;
@@ -76,7 +75,6 @@
             background: #f9fafb;
             color: #4b5563;
         }
-
         select {
             padding: 6px 10px;
             border-radius: 999px;
@@ -85,15 +83,23 @@
             background: #ffffff;
         }
 
+        .message {
+            font-size: 13px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .message.success { background: #ecfdf3; border: 1px solid #bbf7d0; color: #166534; display: block; }
+        .message.error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; display: block; }
+        .message.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; display: block; }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
             font-size: 13px;
         }
-        thead {
-            background: #f9fafb;
-        }
+        thead { background: #f9fafb; }
         th, td {
             padding: 10px 8px;
             border-bottom: 1px solid #e5e7eb;
@@ -104,57 +110,89 @@
             font-weight: 600;
             color: #4b5563;
             font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
-        tbody tr:hover {
-            background: #f9fafb;
-        }
+        tbody tr:hover { background: #f9fafb; }
 
         .badge {
-            display: inline-block;
-            padding: 3px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
             border-radius: 999px;
             font-size: 11px;
             font-weight: 600;
         }
-        .badge-new { background:#eff6ff; color:#1d4ed8; }
-        .badge-approved { background:#ecfdf3; color:#15803d; }
-        .badge-rejected { background:#fef2f2; color:#b91c1c; }
-        .badge-needs { background:#fffbeb; color:#92400e; }
-
-        .links a {
-            display: block;
-            color: #2563eb;
-            text-decoration: none;
-            margin-bottom: 2px;
-            word-break: break-all;
-        }
-        .links a:hover { text-decoration: underline; }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px 10px 15px;
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .note {
-            margin-top: 10px;
-            font-size: 11px;
-            color: #9ca3af;
-        }
+        .badge-draft { background: #eff6ff; color: #1d4ed8; }
+        .badge-submitted { background: #ede9fe; color: #5b21b6; }
+        .badge-needs { background: #fffbeb; color: #92400e; }
+        .badge-approved { background: #ecfdf3; color: #15803d; }
+        .badge-rejected { background: #fef2f2; color: #b91c1c; }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 999px;
             display: inline-block;
-            margin-right: 5px;
+        }
+        .dot-draft { background: #2563eb; }
+        .dot-submitted { background: #6d28d9; }
+        .dot-needs { background: #f97316; }
+        .dot-approved { background: #16a34a; }
+        .dot-rejected { background: #dc2626; }
+
+        .links a {
+            display: block;
+            color: #2563eb;
+            text-decoration: none;
+            margin-bottom: 3px;
+            word-break: break-all;
+        }
+        .links a:hover { text-decoration: underline; }
+        .muted { color: #9ca3af; }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 2px 0;
+        }
+        .action-btn.primary { background: #2563eb; color: #ffffff; }
+        .action-btn.secondary { background: #111827; color: #ffffff; }
+        .action-btn.outline { background: #ffffff; color: #111827; border: 1px solid #d1d5db; }
+        .action-btn.approve { background: #15803d; color: #ffffff; }
+        .action-btn.reject { background: #b91c1c; color: #ffffff; }
+        .action-btn:hover { opacity: 0.9; }
+        .action-btn:disabled { opacity: 0.6; cursor: default; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 10px 20px;
+            font-size: 13px;
+            color: #6b7280;
         }
 
-        .dot-approved { background:#16a34a; }
-        .dot-rejected { background:#dc2626; }
-        .dot-needs { background:#f97316; }
-        .dot-new { background:#2563eb; }
+        .notes {
+            font-size: 12px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .notes strong { display: block; font-size: 11px; color: #111827; }
+
+        .hidden { display: none; }
+
+        .note {
+            margin-top: 14px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
@@ -165,88 +203,147 @@
         <div class="user-info" id="userInfo"></div>
     </div>
 
-    <h1>My Proposals</h1>
-    <div class="subtitle">
-        All AI-generated proposals you have created as a Vendor.
-        You can open the Gamma presentation or download PDF/PPTX (if available).
-    </div>
+    <h1 id="pageTitle">Proposals</h1>
+    <div class="subtitle" id="subtitle">AI generated proposals overview.</div>
 
-    <div class="filters">
+    <div id="filtersVendor" class="filters hidden">
+        <div class="pill">Role: <strong id="roleLabelVendor">VENDOR</strong></div>
         <div class="pill">
-            <span>Role:</span>
-            <strong id="roleLabel">VENDOR</strong>
-        </div>
-
-        <div class="pill">
-            <span>Filter by status:</span>
-            <select id="statusFilter" onchange="renderTable()">
+            Status filter:
+            <select id="statusFilterVendor" onchange="renderVendorTable()">
                 <option value="ALL">All</option>
-                <option value="NEEDS_CHANGES">Needs Review</option>
+                <option value="DRAFT">Draft</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="NEEDS_CHANGES">Needs Changes</option>
                 <option value="APPROVED">Approved</option>
                 <option value="REJECTED">Rejected</option>
             </select>
         </div>
     </div>
 
+    <div id="filtersClient" class="filters hidden">
+        <div class="pill">Role: <strong id="roleLabelClient">CLIENT</strong></div>
+        <div class="pill">
+            Tender filter:
+            <select id="tenderFilter" onchange="renderClientTable()">
+                <option value="ALL">All tenders</option>
+            </select>
+        </div>
+        <div class="pill">
+            Status filter:
+            <select id="statusFilterClient" onchange="renderClientTable()">
+                <option value="ALL">All statuses</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="NEEDS_CHANGES">Needs Changes</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="DRAFT">Draft</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="message" class="message"></div>
+
     <div id="tableWrapper"></div>
 
     <div class="note">
-        • Data loaded from <code>/api/v1/proposals/vendor/{vendorId}</code>
-        • Tender titles (if available) are fetched individually from <code>/api/v1/tenders/get/{id}</code>.
-        • Status values follow your model validation: <code>APPROVED</code>, <code>REJECTED</code>, <code>NEEDS_CHANGES</code>.
+        • Vendor data loaded from <code>/api/v1/proposals/vendor/{vendorId}</code>.<br>
+        • Client data loaded from <code>/api/v1/proposals/client/{clientId}</code> with tender/user lookups.
     </div>
 </div>
 
 <script>
-    let currentVendorId = null;
-    let proposals = [];
-    const tenderTitles = {}; // tenderId -> title
+    const state = {
+        role: null,
+        vendorId: null,
+        clientId: null,
+        proposals: [],
+        tenderTitles: {},
+        vendorNames: {},
+        loading: false
+    };
+
+    const STATUS_BADGES = {
+        "DRAFT": { badge: "badge-draft", dot: "dot-draft" },
+        "SUBMITTED": { badge: "badge-submitted", dot: "dot-submitted" },
+        "NEEDS_CHANGES": { badge: "badge-needs", dot: "dot-needs" },
+        "APPROVED": { badge: "badge-approved", dot: "dot-approved" },
+        "REJECTED": { badge: "badge-rejected", dot: "dot-rejected" }
+    };
+
+    function goBack() {
+        window.location.href = "/dashboard.html";
+    }
+
+    function showMessage(type, text) {
+        const msg = document.getElementById("message");
+        msg.className = "message " + type;
+        msg.textContent = text;
+        msg.style.display = "block";
+    }
+
+    function clearMessage() {
+        const msg = document.getElementById("message");
+        msg.className = "message";
+        msg.textContent = "";
+        msg.style.display = "none";
+    }
 
     async function initPage() {
         const id = localStorage.getItem("currentUserId");
         const name = localStorage.getItem("currentUserName");
         const role = localStorage.getItem("currentUserRole");
 
-        if (!id || role !== "VENDOR") {
+        if (!id || !role) {
             window.location.href = "/auth.html";
             return;
         }
 
-        currentVendorId = parseInt(id, 10);
         document.getElementById("userInfo").textContent =
             "Logged in as: " + name + " (ID: " + id + ")";
-        document.getElementById("roleLabel").textContent = role;
 
-        await loadProposals();
+        state.role = role;
+        if (role === "VENDOR") {
+            state.vendorId = parseInt(id, 10);
+            document.getElementById("filtersVendor").classList.remove("hidden");
+            document.getElementById("pageTitle").textContent = "My Proposals";
+            document.getElementById("subtitle").textContent = "All AI-generated proposals created by you.";
+            document.getElementById("roleLabelVendor").textContent = role;
+            await loadVendorProposals();
+        } else if (role === "CLIENT") {
+            state.clientId = parseInt(id, 10);
+            document.getElementById("filtersClient").classList.remove("hidden");
+            document.getElementById("pageTitle").textContent = "Proposals on My Tenders";
+            document.getElementById("subtitle").textContent = "Review, approve, or request changes from vendors.";
+            document.getElementById("roleLabelClient").textContent = role;
+            await loadClientProposals();
+        } else {
+            showMessage("error", "Unsupported role: " + role);
+        }
     }
 
-    function goBack() {
-        window.location.href = "/dashboard.html";
-    }
-
-    async function loadProposals() {
+    async function loadVendorProposals() {
+        clearMessage();
         const wrapper = document.getElementById("tableWrapper");
         wrapper.innerHTML = "<div class='empty-state'>Loading proposals...</div>";
 
         try {
-            const res = await fetch("/api/v1/proposals/vendor/" + currentVendorId);
+            const res = await fetch(`/api/v1/proposals/vendor/${state.vendorId}`);
             if (!res.ok) {
-                wrapper.innerHTML = "<div class='empty-state'>Failed to load proposals.</div>";
+                const data = await res.json();
+                wrapper.innerHTML = "<div class='empty-state'>" + (data.message || "Failed to load proposals.") + "</div>";
                 return;
             }
 
-            proposals = await res.json();
-
-            if (!Array.isArray(proposals) || proposals.length === 0) {
+            state.proposals = await res.json();
+            if (!Array.isArray(state.proposals) || state.proposals.length === 0) {
                 wrapper.innerHTML = "<div class='empty-state'>You have not generated any proposals yet.</div>";
                 return;
             }
 
-            // جمع كل tenderId الفريدة
-            const uniqueTenderIds = [...new Set(proposals.map(p => p.tenderId))];
-            await loadTenderTitles(uniqueTenderIds);
-
-            renderTable();
+            const tenderIds = [...new Set(state.proposals.map(p => p.tenderId))];
+            await preloadTenders(tenderIds);
+            renderVendorTable();
 
         } catch (e) {
             console.error(e);
@@ -254,32 +351,90 @@
         }
     }
 
-    async function loadTenderTitles(ids) {
+    async function loadClientProposals() {
+        clearMessage();
+        const wrapper = document.getElementById("tableWrapper");
+        wrapper.innerHTML = "<div class='empty-state'>Loading proposals...</div>";
+
+        try {
+            const res = await fetch(`/api/v1/proposals/client/${state.clientId}`);
+            if (!res.ok) {
+                const data = await res.json();
+                wrapper.innerHTML = "<div class='empty-state'>" + (data.message || "Failed to load proposals.") + "</div>";
+                return;
+            }
+
+            state.proposals = await res.json();
+            if (!Array.isArray(state.proposals) || state.proposals.length === 0) {
+                wrapper.innerHTML = "<div class='empty-state'>No proposals submitted to your tenders yet.</div>";
+                return;
+            }
+
+            const tenderIds = [...new Set(state.proposals.map(p => p.tenderId))];
+            const vendorIds = [...new Set(state.proposals.map(p => p.vendorId))];
+            await Promise.all([
+                preloadTenders(tenderIds),
+                preloadVendors(vendorIds)
+            ]);
+            populateClientTenderFilter(tenderIds);
+            renderClientTable();
+
+        } catch (e) {
+            console.error(e);
+            wrapper.innerHTML = "<div class='empty-state'>Error loading proposals.</div>";
+        }
+    }
+
+    async function preloadTenders(ids) {
         for (const id of ids) {
-            if (!id || tenderTitles[id]) continue;
+            if (!id || state.tenderTitles[id]) continue;
             try {
-                const res = await fetch("/api/v1/tenders/get/" + id);
+                const res = await fetch(`/api/v1/tenders/get/${id}`);
                 if (!res.ok) continue;
                 const tender = await res.json();
-                tenderTitles[id] = tender.title || ("Tender #" + id);
+                state.tenderTitles[id] = tender.title || ("Tender #" + id);
             } catch (e) {
-                console.error("Error loading tender " + id, e);
+                console.error("Error loading tender", id, e);
             }
         }
     }
 
-    function renderTable() {
-        const wrapper = document.getElementById("tableWrapper");
+    async function preloadVendors(ids) {
+        for (const id of ids) {
+            if (!id || state.vendorNames[id]) continue;
+            try {
+                const res = await fetch(`/api/v1/users/get/${id}`);
+                if (!res.ok) continue;
+                const user = await res.json();
+                state.vendorNames[id] = user.name || ("Vendor #" + id);
+            } catch (e) {
+                console.error("Error loading vendor", id, e);
+            }
+        }
+    }
 
-        if (!Array.isArray(proposals) || proposals.length === 0) {
+    function populateClientTenderFilter(tenderIds) {
+        const select = document.getElementById("tenderFilter");
+        select.innerHTML = "<option value='ALL'>All tenders</option>";
+        tenderIds.forEach(id => {
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = `#${id} - ${state.tenderTitles[id] || ("Tender #" + id)}`;
+            select.appendChild(option);
+        });
+    }
+
+    function renderVendorTable() {
+        const wrapper = document.getElementById("tableWrapper");
+        if (!Array.isArray(state.proposals) || state.proposals.length === 0) {
             wrapper.innerHTML = "<div class='empty-state'>You have not generated any proposals yet.</div>";
             return;
         }
 
-        const statusFilter = document.getElementById("statusFilter").value;
-        const filtered = proposals.filter(p => {
-            if (statusFilter === "ALL") return true;
-            return (p.status || "").toUpperCase() === statusFilter;
+        const filter = document.getElementById("statusFilterVendor").value;
+        const filtered = state.proposals.filter(p => {
+            if (filter === "ALL") return true;
+            return (p.status || "").toUpperCase() === filter;
         });
 
         if (filtered.length === 0) {
@@ -291,75 +446,286 @@
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Proposal</th>
                   <th>Tender</th>
                   <th>Status</th>
-                  <th>AI Provider</th>
-                  <th>Created At</th>
+                  <th>Submitted</th>
+                  <th>Client Feedback</th>
                   <th>Links</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
         `;
 
         filtered.forEach(p => {
-            const status = (p.status || "").toUpperCase();
-            let badgeClass = "badge-new";
-            let dotClass = "dot-new";
-            let label = status || "NEW";
-
-            if (status === "APPROVED") {
-                badgeClass = "badge-approved";
-                dotClass = "dot-approved";
-            } else if (status === "REJECTED") {
-                badgeClass = "badge-rejected";
-                dotClass = "dot-rejected";
-            } else if (status === "NEEDS_CHANGES") {
-                badgeClass = "badge-needs";
-                dotClass = "dot-needs";
-                label = "NEEDS_CHANGES";
-            }
-
-            const tenderTitle = tenderTitles[p.tenderId] || ("Tender #" + p.tenderId);
-
-            const createdAt = p.createdAt ? p.createdAt.replace("T", " ").substring(0, 19) : "-";
-            const provider = p.aiProvider || "GAMMA";
-
-            let linksHtml = "";
-            if (p.gammaShareLink) {
-                linksHtml += `<a href="${p.gammaShareLink}" target="_blank">Gamma Presentation</a>`;
-            }
-            if (p.pdfUrl) {
-                linksHtml += `<a href="${p.pdfUrl}" target="_blank">PDF Export</a>`;
-            }
-            if (p.pptxUrl) {
-                linksHtml += `<a href="${p.pptxUrl}" target="_blank">PPTX Export</a>`;
-            }
-            if (!linksHtml) {
-                linksHtml = "<span style='color:#9ca3af;'>No links yet</span>";
-            }
+            const status = (p.status || "DRAFT").toUpperCase();
+            const badge = STATUS_BADGES[status] || STATUS_BADGES.DRAFT;
+            const tenderTitle = state.tenderTitles[p.tenderId] || ("Tender #" + p.tenderId);
+            const submittedAt = p.submittedAt ? formatDateTime(p.submittedAt) : "—";
+            const feedback = p.clientFeedback ? escapeHtml(p.clientFeedback) : "<span class='muted'>—</span>";
+            const linksHtml = buildLinksHtml(p);
+            const canSubmit = status === "DRAFT" || status === "NEEDS_CHANGES";
+            const language = p.language ? `<div class='muted'>Language: ${escapeHtml(p.language)}</div>` : "";
+            const notes = p.vendorNotes ? `<div class='muted'>Prompt notes: ${escapeHtml(p.vendorNotes)}</div>` : "";
+            const submitMsg = p.submissionMessage ? `<div class='muted'>Last submit message: ${escapeHtml(p.submissionMessage)}</div>` : "";
 
             html += `
                 <tr>
-                  <td>#${p.id}</td>
                   <td>
-                    <div><strong>${tenderTitle}</strong></div>
-                    <div style="font-size:11px;color:#9ca3af;">Tender ID: ${p.tenderId}</div>
+                    <div><strong>#${p.id}</strong></div>
+                    ${language}
+                    ${notes}
+                    ${submitMsg}
                   </td>
                   <td>
-                    <span class="badge ${badgeClass}">
-                      <span class="status-dot ${dotClass}"></span>${label}
+                    <div><strong>${escapeHtml(tenderTitle)}</strong></div>
+                    <div class='muted'>Tender ID: ${p.tenderId}</div>
+                  </td>
+                  <td>
+                    <span class="badge ${badge.badge}">
+                      <span class="status-dot ${badge.dot}"></span>${status}
                     </span>
                   </td>
-                  <td>${provider}</td>
-                  <td>${createdAt}</td>
+                  <td>${submittedAt}</td>
+                  <td>${feedback}</td>
                   <td class="links">${linksHtml}</td>
+                  <td>
+                    ${canSubmit ? `<button class="action-btn primary" onclick="submitFromList(${p.id})">📤 Submit</button>` : ""}
+                    <button class="action-btn outline" onclick="openGenerator(${p.tenderId})">🔁 Regenerate</button>
+                  </td>
                 </tr>
             `;
         });
 
         html += "</tbody></table>";
         wrapper.innerHTML = html;
+    }
+
+    function renderClientTable() {
+        const wrapper = document.getElementById("tableWrapper");
+        if (!Array.isArray(state.proposals) || state.proposals.length === 0) {
+            wrapper.innerHTML = "<div class='empty-state'>No proposals submitted to your tenders yet.</div>";
+            return;
+        }
+
+        const tenderFilter = document.getElementById("tenderFilter").value;
+        const statusFilter = document.getElementById("statusFilterClient").value;
+
+        const filtered = state.proposals.filter(p => {
+            const status = (p.status || "").toUpperCase();
+            if (statusFilter !== "ALL" && status !== statusFilter) {
+                return false;
+            }
+            if (tenderFilter !== "ALL" && p.tenderId !== parseInt(tenderFilter, 10)) {
+                return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            wrapper.innerHTML = "<div class='empty-state'>No proposals match this filter.</div>";
+            return;
+        }
+
+        let html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Proposal</th>
+                  <th>Tender</th>
+                  <th>Vendor</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th>Vendor Messages</th>
+                  <th>Links</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        filtered.forEach(p => {
+            const status = (p.status || "DRAFT").toUpperCase();
+            const badge = STATUS_BADGES[status] || STATUS_BADGES.DRAFT;
+            const tenderTitle = state.tenderTitles[p.tenderId] || ("Tender #" + p.tenderId);
+            const vendorName = state.vendorNames[p.vendorId] || ("Vendor #" + p.vendorId);
+            const submittedAt = p.submittedAt ? formatDateTime(p.submittedAt) : "—";
+            const linksHtml = buildLinksHtml(p);
+            const vendorMessages = buildVendorMessages(p);
+            const canDecide = status === "SUBMITTED";
+
+            html += `
+                <tr>
+                  <td>
+                    <div><strong>#${p.id}</strong></div>
+                    <div class='muted'>Proposal status history visible below.</div>
+                    ${p.clientFeedback ? `<div class='notes'><strong>Client feedback:</strong>${escapeHtml(p.clientFeedback)}</div>` : ""}
+                  </td>
+                  <td>
+                    <div><strong>${escapeHtml(tenderTitle)}</strong></div>
+                    <div class='muted'>Tender ID: ${p.tenderId}</div>
+                  </td>
+                  <td>
+                    <div><strong>${escapeHtml(vendorName)}</strong></div>
+                    <div class='muted'>Vendor ID: ${p.vendorId}</div>
+                  </td>
+                  <td>
+                    <span class="badge ${badge.badge}">
+                      <span class="status-dot ${badge.dot}"></span>${status}
+                    </span>
+                  </td>
+                  <td>${submittedAt}</td>
+                  <td>${vendorMessages}</td>
+                  <td class="links">${linksHtml}</td>
+                  <td>
+                    ${canDecide ? `
+                        <button class="action-btn approve" onclick="clientDecision(${p.id}, 'APPROVED')">✅ Approve</button>
+                        <button class="action-btn reject" onclick="clientDecision(${p.id}, 'REJECTED')">❌ Reject</button>
+                        <button class="action-btn secondary" onclick="clientDecision(${p.id}, 'NEEDS_CHANGES')">✏️ Request Changes</button>
+                    ` : "<span class='muted'>No actions available</span>"}
+                  </td>
+                </tr>
+            `;
+        });
+
+        html += "</tbody></table>";
+        wrapper.innerHTML = html;
+    }
+
+    function buildLinksHtml(proposal) {
+        const parts = [];
+        if (proposal.gammaShareLink) {
+            parts.push(`<a href="${proposal.gammaShareLink}" target="_blank">Gamma Presentation</a>`);
+        }
+        if (proposal.pdfUrl) {
+            parts.push(`<a href="${proposal.pdfUrl}" target="_blank">PDF Export</a>`);
+        }
+        if (proposal.pptxUrl) {
+            parts.push(`<a href="${proposal.pptxUrl}" target="_blank">PPTX Export</a>`);
+        }
+        if (parts.length === 0) {
+            return "<span class='muted'>No links yet</span>";
+        }
+        return parts.join("");
+    }
+
+    function buildVendorMessages(proposal) {
+        const messages = [];
+        if (proposal.language) {
+            messages.push(`<div class='muted'>Language: ${escapeHtml(proposal.language)}</div>`);
+        }
+        if (proposal.vendorNotes) {
+            messages.push(`<div class='notes'><strong>Prompt notes</strong>${escapeHtml(proposal.vendorNotes)}</div>`);
+        }
+        if (proposal.submissionMessage) {
+            messages.push(`<div class='notes'><strong>Submit message</strong>${escapeHtml(proposal.submissionMessage)}</div>`);
+        }
+        if (messages.length === 0) {
+            return "<span class='muted'>—</span>";
+        }
+        return messages.join("");
+    }
+
+    function formatDateTime(iso) {
+        try {
+            return new Date(iso).toLocaleString();
+        } catch (e) {
+            return iso;
+        }
+    }
+
+    function escapeHtml(value) {
+        if (!value) return "";
+        return value.replace(/[&<>"']/g, function (c) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[c];
+        });
+    }
+
+    function openGenerator(tenderId) {
+        window.location.href = `/proposal-generate.html?tenderId=${tenderId}`;
+    }
+
+    async function submitFromList(proposalId) {
+        const proposal = state.proposals.find(p => p.id === proposalId);
+        if (!proposal) {
+            showMessage("error", "Proposal not found in list.");
+            return;
+        }
+        const defaultMessage = proposal.submissionMessage || "";
+        const message = prompt("Message to client (optional):", defaultMessage);
+        if (message === null) {
+            return; // user cancelled
+        }
+        clearMessage();
+        try {
+            const res = await fetch(`/api/v1/proposals/${proposalId}/submit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vendorId: state.vendorId, message: message.trim() })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showMessage("error", data.message || "Failed to submit proposal.");
+                return;
+            }
+            showMessage("success", "Proposal submitted to client.");
+            await loadVendorProposals();
+        } catch (e) {
+            console.error(e);
+            showMessage("error", "Error submitting proposal: " + e);
+        }
+    }
+
+    async function clientDecision(proposalId, decision) {
+        const proposal = state.proposals.find(p => p.id === proposalId);
+        if (!proposal) {
+            showMessage("error", "Proposal not found.");
+            return;
+        }
+
+        let note = "";
+        if (decision === "NEEDS_CHANGES") {
+            note = prompt("Enter feedback for the vendor (required):", proposal.clientFeedback || "");
+            if (note === null) {
+                return;
+            }
+            if (!note.trim()) {
+                alert("Feedback is required when requesting changes.");
+                return;
+            }
+        } else {
+            note = prompt("Feedback for the vendor (optional):", proposal.clientFeedback || "");
+            if (note === null) {
+                return;
+            }
+        }
+
+        clearMessage();
+        try {
+            const endpoint = decision === "APPROVED" ? "approve" : decision === "REJECTED" ? "reject" : "request-changes";
+            const res = await fetch(`/api/v1/proposals/${proposalId}/${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clientId: state.clientId, note: note.trim() })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showMessage("error", data.message || "Action failed.");
+                return;
+            }
+            showMessage("success", "Proposal status updated.");
+            await loadClientProposals();
+        } catch (e) {
+            console.error(e);
+            showMessage("error", "Error while updating proposal: " + e);
+        }
     }
 
     initPage();
