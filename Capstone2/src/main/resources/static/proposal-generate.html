@@ -186,6 +186,18 @@
             word-break: break-all;
         }
         .links-box a:hover { text-decoration: underline; }
+        .link-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #312e81;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
         .muted {
             color: #9ca3af;
         }
@@ -269,6 +281,23 @@
             font-size: 11px;
             color: #9ca3af;
         }
+
+        .progress-box {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            font-family: "Consolas", monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .progress-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #0ea5e9;
+        }
     </style>
 </head>
 <body>
@@ -321,7 +350,13 @@
 
     <div id="message" class="message"></div>
 
+    <div id="progressBox" class="progress-box">
+        <div class="progress-title">Gamma debug stream</div>
+        <div id="progressText">Waiting to start...</div>
+    </div>
+
     <div id="linksBox" class="links-box">
+        <div class="link-chip">🔗 AI proposal links</div>
         <div><strong>Gamma presentation:</strong> <a id="gammaLink" href="#" target="_blank"></a></div>
         <div id="pdfRow" style="margin-top:6px; display:none;">
             <strong>PDF export:</strong> <a id="pdfLink" href="#" target="_blank"></a>
@@ -330,7 +365,7 @@
             <strong>PPTX export:</strong> <a id="pptxLink" href="#" target="_blank"></a>
         </div>
         <div id="linksEmpty" class="muted" style="margin-top:6px; display:none;">
-            Gamma is still preparing exports. Refresh this page later if links are missing.
+            Gamma is still preparing exports. Keep this page open; links will appear once ready.
         </div>
     </div>
 
@@ -387,6 +422,7 @@
     };
 
     async function initPage() {
+        toggleProgress(false);
         const id = localStorage.getItem("currentUserId");
         const name = localStorage.getItem("currentUserName");
         const role = localStorage.getItem("currentUserRole");
@@ -477,6 +513,7 @@
         clearMessage();
         toggleLinks(false);
         toggleActions(false);
+        toggleProgress(true, "Sending request to Gamma...\n\n" + JSON.stringify(payload, null, 2));
         lastProposal = null;
 
         const tenderId = parseInt(document.getElementById("tenderSelect").value, 10);
@@ -506,6 +543,8 @@
 
             const data = await res.json();
 
+            toggleProgress(true, "✅ Response received\n\n" + JSON.stringify(data, null, 2));
+
             if (!res.ok) {
                 const msg = data.message || "Failed to generate proposal.";
                 showMessage("error", msg);
@@ -520,6 +559,7 @@
 
         } catch (e) {
             console.error(e);
+            toggleProgress(true, "❌ Error while calling generate API:\n\n" + e);
             showMessage("error", "Error while calling generate API: " + e);
         } finally {
             setLoading(false);
@@ -566,6 +606,15 @@
 
         linksEmpty.style.display = hasAnyLink ? "none" : "block";
         toggleLinks(true);
+    }
+
+    function toggleProgress(visible, text) {
+        const box = document.getElementById("progressBox");
+        const progressText = document.getElementById("progressText");
+        if (typeof text === "string") {
+            progressText.textContent = text;
+        }
+        box.style.display = visible ? "block" : "none";
     }
 
     function updateActionsBox(data) {

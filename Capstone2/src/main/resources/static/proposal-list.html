@@ -607,16 +607,16 @@
     function buildLinksHtml(proposal) {
         const parts = [];
         if (proposal.gammaShareLink) {
-            parts.push(`<a href="${proposal.gammaShareLink}" target="_blank">Gamma Presentation</a>`);
+            parts.push(`<a href="${proposal.gammaShareLink}" target="_blank">🔗 Gamma Presentation</a>`);
         }
         if (proposal.pdfUrl) {
-            parts.push(`<a href="${proposal.pdfUrl}" target="_blank">PDF Export</a>`);
+            parts.push(`<a href="${proposal.pdfUrl}" target="_blank">📄 PDF Export</a>`);
         }
         if (proposal.pptxUrl) {
-            parts.push(`<a href="${proposal.pptxUrl}" target="_blank">PPTX Export</a>`);
+            parts.push(`<a href="${proposal.pptxUrl}" target="_blank">📊 PPTX Export</a>`);
         }
         if (parts.length === 0) {
-            return "<span class='muted'>No links yet</span>";
+            return "<span class='muted'>Links will appear here once Gamma finishes exporting.</span>";
         }
         return parts.join("");
     }
