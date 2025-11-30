@@ -27,10 +27,20 @@ public class Proposal {
     private Integer vendorId;    // FK -> User.id (VENDOR)
 
     @NotBlank(message = "status should not be blank")
-    @Pattern(regexp = "^(APPROVED|REJECTED|NEEDS_CHANGES)$", message = "APPROVED, REJECTED, or NEEDS_CHANGES"
+    @Pattern(
+            regexp = "^(DRAFT|SUBMITTED|APPROVED|REJECTED|NEEDS_CHANGES)$",
+            message = "Status must be DRAFT, SUBMITTED, APPROVED, REJECTED, or NEEDS_CHANGES"
     )
     @Column(nullable = false)
-    private String status;       // APPROVED / REJECTED / NEEDS_CHANGES
+    private String status;       // DRAFT -> SUBMITTED -> APPROVED / REJECTED / NEEDS_CHANGES
+
+    private String language;     // Arabic / English
+
+    @Column(columnDefinition = "text")
+    private String vendorNotes;  // stored copy of vendor notes sent to AI
+
+    @Column(columnDefinition = "text")
+    private String submissionMessage;   // optional vendor message shared with the client
 
     @Column(columnDefinition = "text")
     private String technicalSummary;
@@ -47,6 +57,15 @@ public class Proposal {
     private String pptxUrl;
 
     private String aiProvider;   // CEREBRAS / OPENAI / ...
+
+    @Column(columnDefinition = "text")
+    private String clientFeedback;   // notes from client decisions
+
+    private Integer decidedByClientId;   // FK -> User.id (CLIENT)
+
+    private LocalDateTime submittedAt;
+
+    private LocalDateTime decidedAt;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

@@ -14,4 +14,6 @@ public interface ProposalRepository extends JpaRepository<Proposal, Integer> {
     List<Proposal> findProposalsByVendorId(Integer vendorId);
 
     List<Proposal> findProposalsByStatus(String status);   // DRAFT / SUBMITTED / ...
+
+    List<Proposal> findProposalsByTenderIdIn(List<Integer> tenderIds);
 }

@@ -1,7 +1,9 @@
 package com.example.capstone2.controller;
 
 import com.example.capstone2.API.ApiResponse;
+import com.example.capstone2.dto.proposal.ProposalDecisionRequest;
 import com.example.capstone2.dto.proposal.ProposalGenerateRequest;
+import com.example.capstone2.dto.proposal.ProposalSubmitRequest;
 import com.example.capstone2.model.Proposal;
 import com.example.capstone2.service.ProposalService;
 import jakarta.validation.Valid;
@@ -53,6 +55,12 @@ public class ProposalController {
         return ResponseEntity.status(200).body(proposals);
     }
 
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<?> getProposalsForClient(@PathVariable Integer clientId) {
+        List<Proposal> proposals = proposalService.getProposalsForClient(clientId);
+        return ResponseEntity.status(200).body(proposals);
+    }
+
     @PostMapping("/add")
     public ResponseEntity<?> addProposal(@RequestBody @Valid Proposal proposal,
                                          Errors errors) {
@@ -74,7 +82,8 @@ public class ProposalController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateProposal(@PathVariable Integer id, @RequestBody @Valid Proposal proposal,
+    public ResponseEntity<?> updateProposal(@PathVariable Integer id,
+                                            @RequestBody @Valid Proposal proposal,
                                             Errors errors) {
         if (errors.hasErrors()) {
             String message = errors.getFieldError().getDefaultMessage();
@@ -101,7 +110,6 @@ public class ProposalController {
         return ResponseEntity.status(200).body(new ApiResponse("Proposal deleted successfully"));
     }
 
-
     @PostMapping("/generate")
     public ResponseEntity<?> generate(@RequestBody @Valid ProposalGenerateRequest request,
                                       Errors errors) {
@@ -110,15 +118,79 @@ public class ProposalController {
             return ResponseEntity.status(400).body(new ApiResponse(message));
         }
 
-        Proposal proposal = proposalService.generateProposal(request);
-        if (proposal == null) {
-            return ResponseEntity.status(400)
-                    .body(new ApiResponse("Could not generate proposal"));
+        try {
+            Proposal proposal = proposalService.generateProposal(request);
+            return ResponseEntity.status(200).body(proposal);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(400).body(new ApiResponse(ex.getMessage()));
         }
-
-        return ResponseEntity.status(200).body(proposal);
     }
 
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<?> submitProposal(@PathVariable Integer id,
+                                            @RequestBody @Valid ProposalSubmitRequest request,
+                                            Errors errors) {
+        if (errors.hasErrors()) {
+            String message = errors.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(400).body(new ApiResponse(message));
+        }
 
+        try {
+            Proposal proposal = proposalService.submitProposal(id, request);
+            return ResponseEntity.status(200).body(proposal);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(400).body(new ApiResponse(ex.getMessage()));
+        }
+    }
 
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<?> approveProposal(@PathVariable Integer id,
+                                             @RequestBody @Valid ProposalDecisionRequest request,
+                                             Errors errors) {
+        if (errors.hasErrors()) {
+            String message = errors.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(400).body(new ApiResponse(message));
+        }
+
+        try {
+            Proposal proposal = proposalService.approveProposal(id, request);
+            return ResponseEntity.status(200).body(proposal);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(400).body(new ApiResponse(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> rejectProposal(@PathVariable Integer id,
+                                            @RequestBody @Valid ProposalDecisionRequest request,
+                                            Errors errors) {
+        if (errors.hasErrors()) {
+            String message = errors.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(400).body(new ApiResponse(message));
+        }
+
+        try {
+            Proposal proposal = proposalService.rejectProposal(id, request);
+            return ResponseEntity.status(200).body(proposal);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(400).body(new ApiResponse(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/request-changes")
+    public ResponseEntity<?> requestChanges(@PathVariable Integer id,
+                                            @RequestBody @Valid ProposalDecisionRequest request,
+                                            Errors errors) {
+        if (errors.hasErrors()) {
+            String message = errors.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(400).body(new ApiResponse(message));
+        }
+
+        try {
+            Proposal proposal = proposalService.requestChanges(id, request);
+            return ResponseEntity.status(200).body(proposal);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(400).body(new ApiResponse(ex.getMessage()));
+        }
+    }
 }
